@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Text Announcer</title>
+</head>
+<style>
+  
+  body {
+  font-family: Arial, sans-serif;
+  background-color: #91c1d5;
+  text-align: center;
+  font-weight: bold;
+}
+
+h1 {
+  color: #444444;
+  font-size: 36px;
+  margin-top: 50px;
+}
+
+form {
+  margin-top: 50px;
+}
+
+label {
+  display: inline-block;
+  width: 300px;
+  text-align: left;
+  font-size: 20px;
+  color: #444444;
+  margin-bottom: 10px;
+}
+
+input[type="text"], input[type="date"], input[type="time"] {
+  font-size: 20px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  margin-bottom: 20px;
+}
+
+input[type="submit"], button[type="submit"], button {
+  background-color: #3c82eb;
+  color: #FFFFFF;
+  font-size: 20px;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+
+</style>
+<body>
+</script>
+<h1>Important Announcements</h1>
+<label for="textInput">Enter Announcement:</label>
+<input type="text" id="textInput">
+<br>
+<label for="timeInput">Announce after every:</label>
+<input type="number" id="timeInput" min="1" max="24" step="1" value="1"> hours
+<br>
+<button onclick="startAnnouncement()">Start Announcing</button>
+<br><br>
+<div id="announcements"></div>
+<script>
+  let intervalId;
+  const announcements = [];
+  function startAnnouncement() {
+	const textInput = document.getElementById("textInput").value;
+	const timeInput = document.getElementById("timeInput").value;
+	if (textInput.trim() === "") {
+	  alert("Please enter text to announce");
+	  return;
+	}
+	const intervalTime = timeInput * 60 * 60 * 1000; // Convert hours to milliseconds
+	const announce = function() {
+	  const msg = new SpeechSynthesisUtterance(textInput);
+	  window.speechSynthesis.speak(msg);
+	  announcements.push({text: textInput, time: new Date()});
+	  updateAnnouncements();
+	}
+	announce(); // Announce immediately
+	intervalId = setInterval(announce, intervalTime);
+  }
+  function stopAnnouncement() {
+	clearInterval(intervalId);
+  }
+  function updateAnnouncements() {
+	const announcementsDiv = document.getElementById("announcements");
+	announcementsDiv.innerHTML = ""; // Clear previous announcements
+	for (let i = 0; i < announcements.length; i++) {
+	  const announcement = announcements[i];
+	  const announcementElem = document.createElement("div");
+	  const deleteButton = document.createElement("button");
+	  deleteButton.innerHTML = "Delete";
+	  deleteButton.onclick = function() {
+		announcements.splice(i, 1);
+		updateAnnouncements();
+	  }
+	  announcementElem.innerHTML = `${announcement.text} - ${announcement.time.toLocaleString()} `;
+	  announcementElem.appendChild(deleteButton);
+	  announcementsDiv.appendChild(announcementElem);
+	}
+  }
+</script>
+</body>
+
+</html>
