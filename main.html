@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+    
+  <head>
+    <title>Announcement System with Calendar</title>
+    <style>
+        
+     
+     body {
+  font-family: Arial, sans-serif;
+  background-color: #91c1d5;
+  text-align: center;
+  font-weight: bold;
+}
+
+h1 {
+  color: #444444;
+  font-size: 36px;
+  margin-top: 50px;
+}
+
+form {
+  margin-top: 50px;
+}
+
+label {
+  display: inline-block;
+  width: 150px;
+  text-align: left;
+  font-size: 20px;
+  color: #444444;
+  margin-bottom: 10px;
+}
+
+input[type="text"], input[type="date"], input[type="time"] {
+  font-size: 20px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  margin-bottom: 20px;
+}
+
+input[type="submit"], button[type="submit"], button {
+  background-color: #3c82eb;
+  color: #FFFFFF;
+  font-size: 20px;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 50px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+th {
+  font-size: 20px;
+  font-weight: bold;
+  color: #FFFFFF;
+  background-color: #3c82eb;
+  padding: 10px;
+}
+
+td {
+  font-size: 16px;
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #CCCCCC;
+}
+
+td ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+td ul li {
+  margin: 10px 0;
+  font-size: 14px;
+  text-align: left;
+  line-height: 1.5;
+  color: #444444;
+}
+
+td ul li button {
+  background-color: #444444;
+  color: #FFFFFF;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+img.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 50px;
+}
+
+    </style>
+  </head>
+  <body>
+
+    
+
+    
+    <img src="C:\mini final\download.svg" alt="logo" class="center" width="300" height="300">
+    <button onclick="toggleCalendar()">Calendar ON/OFF </button>
+
+    <div id="calendar" style="display: none;">
+      <!-- Your calendar code goes here -->
+    </div>
+    <form>
+      <label for="faculty">Faculty Name:</label>
+      <input type="text" id="faculty" name="faculty"><br><br>
+
+      <label for="subject">Subject:</label>
+      <input type="text" id="subject" name="subject"><br><br>
+
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date"><br><br>
+
+      <label for="time">Time:</label>
+      <input type="time" id="time" name="time"><br><br>
+
+      <button type="button" onclick="setAnnouncement()">Set Announcement</button>
+    </form>
+
+    <h2></h2>
+    
+    
+    
+      <a href="sub.html">  
+        <button>Important announcements</button>  
+      </a>
+     
+
+
+    <script >
+      var announcements = {};
+
+function setAnnouncement() {
+  var faculty = document.getElementById("faculty").value;
+  var subject = document.getElementById("subject").value;
+  var date = document.getElementById("date").value;
+  var time = document.getElementById("time").value;
+
+  var announcementDate = new Date(date + " " + time);
+  var now = new Date();
+
+  var timeDifference = announcementDate.getTime() - now.getTime();
+
+  if (timeDifference < 0) {
+    alert("Please select a future date and time.");
+    return;
+  }
+
+  var id = Date.now().toString();
+  announcements[id] = {
+    faculty: faculty,
+    subject: subject,
+    date: date,
+    time: time
+  };
+  localStorage.setItem("announcements", JSON.stringify(announcements));
+
+  setTimeout(function() {
+    var speech = new SpeechSynthesisUtterance();
+    speech.lang = "en-US";
+    speech.text = "Next lecture " + subject + " by " + faculty;
+    speech.volume = 1;
+    speech.rate = 1;
+    speech.pitch = 1;
+    window.speechSynthesis.speak(speech);
+  }, timeDifference);
+
+  updateCalendar();
+}
+
+function deleteAnnouncement(id) {
+  delete announcements[id];
+  localStorage.setItem("announcements", JSON.stringify(announcements));
+
+  updateCalendar();
+}
+
+function updateCalendar() {
+  var calendar = document.getElementById("calendar");
+
+  var currentDate = new Date();
+  var currentYear = currentDate.getFullYear();
+  var currentMonth = currentDate.getMonth();
+
+  var calendarHTML = "<table><tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr>";
+
+  for (var i = 0; i < 6; i++) {
+    calendarHTML += "<tr>";
+
+    for (var j = 0; j < 7; j++) {
+      var date = new Date(currentYear, currentMonth, 1);
+      var day = date.getDay();
+      var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      var cellIndex = i * 7 + j;
+      var dateNumber = cellIndex - day + 1;
+
+      
+      if (dateNumber <= 0 || dateNumber > daysInMonth) {
+    calendarHTML += "<td></td>";
+  } else {
+    date.setDate(dateNumber);
+    var dateString = date.toISOString().substring(0, 10);
+
+    var announcementsForDate = getAnnouncementsForDate(dateString);
+
+    var cellHTML = "<td>" + dateNumber + "<ul>";
+
+    for (var k = 0; k < announcementsForDate.length; k++) {
+      var announcement = announcementsForDate[k];
+      cellHTML += "<li>" + announcement.subject + " by " + announcement.faculty + " at " + announcement.time + " <button onclick=\"deleteAnnouncement('" + announcement.id + "')\">X</button></li>";
+    }
+
+    cellHTML += "</ul></td>";
+
+    calendarHTML += cellHTML;
+  }
+}
+
+calendarHTML += "</tr>";
+}
+
+calendarHTML += "</table>";
+
+calendar.innerHTML = calendarHTML;
+}
+
+function getAnnouncementsForDate(dateString) {
+var announcementsForDate = [];
+
+for (var id in announcements) {
+if (announcements.hasOwnProperty(id)) {
+var announcement = announcements[id];
+if (announcement.date === dateString) {
+announcement.id = id;
+announcementsForDate.push(announcement);
+}
+}
+}
+
+return announcementsForDate;
+}
+
+window.onload = function() {
+var announcementsString = localStorage.getItem("announcements");
+
+if (announcementsString) {
+announcements = JSON.parse(announcementsString);
+}
+
+updateCalendar();
+};
+
+
+function toggleCalendar() {
+  var calendar = document.getElementById("calendar");
+  if (calendar.style.display === "none") {
+    calendar.style.display = "block";
+  } else {
+    calendar.style.display = "none";
+  }
+}
+
+	
+
+    
+    </script>
+    
+  </body>
+  
+</html>
